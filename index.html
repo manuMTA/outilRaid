@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Registre des dossards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F3EA;
+    --card:#FFFFFF;
+    --ink:#1E2A38;
+    --ink-soft:#5B6675;
+    --line:#DAD4C4;
+    --red:#C1443A;
+    --red-dark:#8F2E27;
+    --green:#4C6B3C;
+    --green-bg:#E9EFE1;
+    --danger-bg:#F7E4E1;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding:40px 20px 80px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+  header{margin-bottom:32px;}
+  .kicker{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    letter-spacing:.12em;
+    color:var(--red-dark);
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:32px;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  .sub{color:var(--ink-soft);font-size:15px;margin:0;max-width:60ch;}
+
+  .save-status{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:12px;
+  }
+  .save-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--green);
+    flex-shrink:0;
+  }
+  .save-status.saving .save-dot{background:var(--red);animation:pulse 1s ease-in-out infinite;}
+  .save-status.error .save-dot{background:var(--red-dark);animation:none;}
+  .save-status.error{color:var(--red-dark);font-weight:500;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .save-retry{
+    font-size:12px;
+    height:26px;
+    padding:0 10px;
+    margin-left:4px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:24px;
+    margin-bottom:28px;
+  }
+  .card h2{
+    font-family:'Oswald',sans-serif;
+    font-weight:500;
+    font-size:18px;
+    margin:0 0 18px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:110px 1fr 1fr;
+    gap:14px 16px;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12px;color:var(--ink-soft);font-weight:500;}
+  .field input{
+    height:38px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:0 10px;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:#FBFAF6;
+  }
+  .field input:focus{
+    outline:none;
+    border-color:var(--red);
+    background:#fff;
+  }
+  .field.dossard input{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:18px;
+    text-align:center;
+  }
+  .field.dossard input[readonly]{
+    background:#F1EEE4;
+    color:var(--ink-soft);
+    cursor:not-allowed;
+  }
+  .team-block{
+    grid-column:1 / -1;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px 16px;
+    border-top:1px dashed var(--line);
+    padding-top:14px;
+    margin-top:2px;
+  }
+  .team-label{
+    grid-column:1/-1;
+    font-size:12px;
+    letter-spacing:.06em;
+    color:var(--red-dark);
+    font-weight:600;
+    margin-bottom:-4px;
+  }
+  .err{
+    color:var(--red-dark);
+    font-size:13px;
+    min-height:18px;
+    margin-top:12px;
+  }
+  .actions{display:flex;gap:10px;margin-top:16px;}
+  button{
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    border-radius:4px;
+    border:1px solid transparent;
+    padding:0 18px;
+    height:38px;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:hover{background:#141d28;}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--ink);}
+  .btn-ghost:hover{background:#F1EEE4;}
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .toolbar input{
+    height:36px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:0 12px;
+    font-size:14px;
+    width:240px;
+    background:#FBFAF6;
+  }
+  .count{font-size:13px;color:var(--ink-soft);}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  thead th{
+    text-align:left;
+    font-size:11px;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    font-weight:600;
+    padding:0 10px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  tbody td{
+    padding:12px 10px;
+    border-bottom:1px solid #EFEBE0;
+    vertical-align:middle;
+  }
+  tbody tr:hover{background:#FBFAF3;}
+  .bib{
+    display:inline-block;
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    background:var(--ink);
+    color:#fff;
+    padding:3px 10px;
+    border-radius:3px;
+    min-width:34px;
+    text-align:center;
+  }
+  .row-actions{display:flex;gap:8px;justify-content:flex-end;}
+  .icon-btn{
+    height:30px;width:30px;
+    padding:0;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-soft);
+  }
+  .icon-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .icon-btn.danger:hover{border-color:var(--red);color:var(--red-dark);background:var(--danger-bg);}
+  .empty{
+    text-align:center;
+    padding:40px 10px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .field input.invalid{border-color:var(--red);background:var(--danger-bg);}
+
+  .chrono-card{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .chrono-left{display:flex;align-items:center;gap:18px;}
+  .chrono-display{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:40px;
+    letter-spacing:.02em;
+    color:var(--ink);
+    min-width:150px;
+  }
+  .chrono-display.running{color:var(--red-dark);}
+  .chrono-status{
+    font-size:12px;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    margin:0 0 4px;
+  }
+  .btn-start{
+    background:var(--red);
+    color:#fff;
+    font-size:15px;
+    padding:0 26px;
+    height:44px;
+  }
+  .btn-start:hover{background:var(--red-dark);}
+  .btn-start[disabled]{background:#D8D2C4;color:#8b8577;cursor:not-allowed;}
+
+  .stage-table th, .stage-table td{text-align:center;}
+  .stage-table th:first-child, .stage-table td:first-child,
+  .stage-table th:nth-child(2), .stage-table td:nth-child(2){text-align:left;}
+  .stage-cell{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .stage-btn{
+    font-size:12px;
+    font-weight:500;
+    height:30px;
+    padding:0 12px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:4px;
+    color:var(--ink);
+  }
+  .stage-btn:hover{border-color:var(--red);color:var(--red-dark);}
+  .stage-btn[disabled]{color:#B9B3A3;cursor:not-allowed;background:#FBFAF3;}
+  .stage-time{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--green);
+    background:var(--green-bg);
+    padding:2px 8px;
+    border-radius:3px;
+  }
+  .stage-abs{font-size:11px;color:var(--ink-soft);}
+
+  .dns-badge{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.03em;
+    color:#fff;
+    background:var(--red-dark);
+    padding:2px 10px;
+    border-radius:3px;
+  }
+  .dns-btn{
+    font-size:11px;
+    font-weight:500;
+    height:26px;
+    padding:0 10px;
+    border:1px solid var(--red);
+    background:#fff;
+    border-radius:4px;
+    color:var(--red-dark);
+    margin-top:2px;
+  }
+  .dns-btn:hover{background:var(--red);color:#fff;}
+  .dns-btn[disabled]{opacity:.35;cursor:not-allowed;border-color:var(--line);color:var(--ink-soft);background:#fff;}
+
+  .pen-stepper{display:flex;align-items:center;gap:5px;margin-top:2px;}
+  .pen-btn{
+    width:20px;height:20px;
+    padding:0;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:3px;
+    font-size:13px;
+    line-height:1;
+    color:var(--ink-soft);
+  }
+  .pen-btn:hover{border-color:var(--red);color:var(--red-dark);}
+  .pen-btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .pen-count{font-size:10.5px;color:var(--ink-soft);white-space:nowrap;}
+  .pen-unit{font-size:10px;color:var(--ink-soft);margin-top:1px;}
+  .abs-row{display:flex;align-items:center;gap:4px;}
+  .edit-time-btn{
+    width:18px;height:18px;
+    padding:0;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:3px;
+    font-size:10px;
+    line-height:1;
+    color:var(--ink-soft);
+    flex-shrink:0;
+  }
+  .edit-time-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .pen-badge{
+    font-size:10.5px;
+    font-weight:500;
+    color:var(--red-dark);
+    background:var(--danger-bg);
+    padding:1px 6px;
+    border-radius:3px;
+    margin-top:2px;
+  }
+  .bonus-badge{
+    font-size:10.5px;
+    font-weight:500;
+    color:#2E4022;
+    background:var(--green-bg);
+    padding:1px 6px;
+    border-radius:3px;
+    margin-top:2px;
+  }
+
+  .archery-input{display:flex;align-items:center;gap:6px;}
+  .archery-input input[type="number"]{
+    width:52px;height:28px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:0 6px;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    text-align:center;
+    background:#fff;
+    color:var(--ink);
+  }
+  .archery-input input[type="number"]:focus{outline:none;border-color:var(--red);}
+  .archery-unit{font-size:11px;color:var(--ink-soft);}
+  .archery-bonus{font-size:10.5px;font-weight:500;color:var(--green);margin-top:2px;}
+
+  .final-table{font-size:13px;}
+  .final-table th, .final-table td{text-align:center;}
+  .final-table th:nth-child(2), .final-table td:nth-child(2),
+  .final-table th:nth-child(3), .final-table td:nth-child(3){text-align:left;}
+  .final-cell{display:flex;flex-direction:column;align-items:center;line-height:1.5;}
+  .final-time{font-family:'Oswald',sans-serif;font-weight:600;}
+  .final-pen{font-size:10.5px;color:var(--red-dark);}
+  .final-bonus{font-family:'Oswald',sans-serif;font-weight:600;color:var(--green);}
+  .final-bonus-time{font-size:10.5px;color:var(--green);}
+  .final-total{font-family:'Oswald',sans-serif;font-weight:700;font-size:16px;}
+
+  .quick-grid{
+    display:grid;
+    grid-template-columns:110px 1fr auto;
+    gap:14px;
+    align-items:end;
+  }
+  .field select{
+    height:38px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:0 10px;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:#FBFAF6;
+  }
+  .field select:focus{outline:none;border-color:var(--red);background:#fff;}
+  .quick-feedback{
+    margin-top:14px;
+    font-size:14px;
+    padding:10px 14px;
+    border-radius:4px;
+    display:none;
+  }
+  .quick-feedback.ok{display:block;background:var(--green-bg);color:#2E4022;}
+  .quick-feedback.error{display:block;background:var(--danger-bg);color:var(--red-dark);}
+
+  .stage-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .stage-tab{
+    font-size:13px;
+    font-weight:500;
+    height:34px;
+    padding:0 16px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:20px;
+    color:var(--ink-soft);
+  }
+  .stage-tab:hover{border-color:var(--ink);color:var(--ink);}
+  .stage-tab.active{background:var(--ink);border-color:var(--ink);color:#fff;}
+
+  .rank-table th:first-child, .rank-table td:first-child{width:44px;text-align:center;}
+  .rank-table th:last-child, .rank-table td:last-child{text-align:right;}
+  .rank-num{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink-soft);
+  }
+  tr.podium-1 .rank-num, tr.podium-2 .rank-num, tr.podium-3 .rank-num{color:var(--ink);}
+  tr.podium-1{background:#FBF3DE;}
+  tr.podium-2{background:#F5F3EE;}
+  tr.podium-3{background:#F9EFE6;}
+  .rank-time{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:15px;
+  }
+
+  .nav-tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:28px;
+    border-bottom:1px solid var(--line);
+  }
+  .nav-tab{
+    font-family:'Oswald',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    letter-spacing:.02em;
+    height:44px;
+    padding:0 6px;
+    border:none;
+    border-bottom:2px solid transparent;
+    background:transparent;
+    color:var(--ink-soft);
+    border-radius:0;
+  }
+  .nav-tab:hover{color:var(--ink);background:transparent;}
+  .nav-tab.active{color:var(--red-dark);border-bottom-color:var(--red);}
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .header-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .card-danger{
+    border-color:#E3BDB8;
+    background:#FDF7F5;
+  }
+  .card-danger h2{color:var(--red-dark);}
+  .card-danger .sub{margin-bottom:16px;}
+  .btn-danger{
+    background:#fff;
+    border:1px solid var(--red);
+    color:var(--red-dark);
+  }
+  .btn-danger:hover{background:var(--red);color:#fff;}
+
+  @media (max-width:600px){
+    .grid{grid-template-columns:1fr;}
+    .team-block{grid-template-columns:1fr;}
+    table, thead, tbody, tr, td{display:block;}
+    thead{display:none;}
+    tbody tr{border:1px solid var(--line);border-radius:6px;margin-bottom:10px;padding:10px;}
+    tbody td{border:none;padding:4px 0;}
+    .row-actions{justify-content:flex-start;margin-top:8px;}
+    .chrono-card{flex-direction:column;align-items:stretch;}
+    .stage-table tbody tr{padding:12px;}
+    .stage-table td{display:flex;justify-content:space-between;align-items:center;padding:6px 0;text-align:left;}
+    .stage-table td:before{content:attr(data-label);font-size:11px;color:var(--ink-soft);}
+    .quick-grid{grid-template-columns:1fr;}
+    .final-table, .final-table thead, .final-table tbody, .final-table tr, .final-table td{display:block;}
+    .final-table thead{display:none;}
+    .final-table tbody tr{border:1px solid var(--line);border-radius:6px;margin-bottom:10px;padding:10px;}
+    .final-table td{border:none;padding:4px 0;display:flex;justify-content:space-between;align-items:center;text-align:left;}
+    .final-table td:before{content:attr(data-label);font-size:11px;color:var(--ink-soft);}
+    .final-cell{align-items:flex-end;}
+  }
+
+  /* ---- Connexion (version Supabase) ---- */
+  .login-overlay{
+    position:fixed;inset:0;z-index:100;
+    background:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .login-overlay[hidden]{display:none;}
+  .login-card{width:100%;max-width:380px;}
+  .login-card .field{margin-bottom:14px;}
+  .login-card .btn-primary{width:100%;}
+  .user-chip{font-size:13px;color:var(--ink-soft);margin-left:auto;}
+  .load-error{
+    background:var(--danger-bg);color:var(--red-dark);
+    border:1px solid #E3BDB8;border-radius:6px;
+    padding:14px 16px;margin-bottom:24px;font-size:14px;
+  }
+  .load-error[hidden]{display:none;}
+  .load-error button{margin-top:10px;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="login-overlay" id="login-overlay">
+  <section class="card login-card">
+    <p class="kicker">Accès organisateurs</p>
+    <h2>Connexion</h2>
+    <div class="field">
+      <label for="login-email">Adresse e-mail</label>
+      <input id="login-email" type="email" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="login-password">Mot de passe</label>
+      <input id="login-password" type="password" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="login-btn">Se connecter</button>
+    <p class="err" id="login-err"></p>
+  </section>
+</div>
+<div class="wrap">
+  <div class="load-error" id="load-error" hidden>
+    <strong>Impossible de charger les données depuis la base.</strong>
+    Vérifiez la connexion internet. Aucune modification n'est enregistrée tant que le chargement n'a pas réussi.<br>
+    <button class="btn-ghost" id="load-retry-btn">Réessayer</button>
+  </div>
+  <header>
+    <p class="kicker">Registre d'épreuve</p>
+    <h1>Gestion des dossards</h1>
+    <p class="sub">Enregistrez chaque numéro de dossard avec les deux membres de l'équipe. Les données sont conservées automatiquement.</p>
+    <div class="save-status" id="save-status">
+      <span class="save-dot"></span>
+      <span id="save-status-text">Toutes les modifications sont enregistrées</span>
+      <button class="btn-ghost save-retry" id="save-retry-btn" style="display:none;">Réessayer</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn-ghost" id="backup-btn">Télécharger une sauvegarde</button>
+      <button class="btn-ghost" id="import-btn">Importer une sauvegarde</button>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none;">
+      <span class="user-chip" id="user-chip"></span>
+      <button class="btn-ghost" id="logout-btn">Se déconnecter</button>
+    </div>
+  </header>
+
+  <nav class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab" data-screen="equipes">Équipes</button>
+    <button class="nav-tab" data-screen="chrono">Chronométrage</button>
+    <button class="nav-tab" data-screen="classement">Classement</button>
+  </nav>
+
+  <div class="screen" data-screen="equipes">
+    <section class="card">
+      <h2 id="form-title">Ajouter une équipe</h2>
+      <div class="grid">
+        <div class="field dossard">
+          <label for="in-dossard">Dossard</label>
+          <input id="in-dossard" type="text" readonly>
+        </div>
+        <div class="field">
+          <label for="in-equipe">Nom d'équipe</label>
+          <input id="in-equipe" type="text" placeholder="Les Furieux du Bitume">
+        </div>
+        <div class="field">
+          <label for="in-categorie">Catégorie</label>
+          <select id="in-categorie">
+            <option value="Mixte">Mixte</option>
+            <option value="Hommes">Hommes</option>
+            <option value="Femmes">Femmes</option>
+          </select>
+        </div>
+
+        <div class="team-block">
+          <div class="team-label">Équipier 1</div>
+          <div class="field">
+            <label for="in-nom1">Nom</label>
+            <input id="in-nom1" type="text" placeholder="Durand">
+          </div>
+          <div class="field">
+            <label for="in-prenom1">Prénom</label>
+            <input id="in-prenom1" type="text" placeholder="Camille">
+          </div>
+        </div>
+
+        <div class="team-block">
+          <div class="team-label">Équipier 2</div>
+          <div class="field">
+            <label for="in-nom2">Nom</label>
+            <input id="in-nom2" type="text" placeholder="Bernard">
+          </div>
+          <div class="field">
+            <label for="in-prenom2">Prénom</label>
+            <input id="in-prenom2" type="text" placeholder="Julie">
+          </div>
+        </div>
+      </div>
+      <p class="err" id="form-err"></p>
+      <div class="actions">
+        <button class="btn-primary" id="submit-btn">Ajouter l'équipe</button>
+        <button class="btn-ghost" id="cancel-btn" style="display:none;">Annuler la modification</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <input id="search" type="text" placeholder="Rechercher un dossard ou un nom">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <span class="count" id="count-label">0 équipe</span>
+          <button class="btn-ghost" id="export-btn">Exporter en CSV</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px;">Dossard</th>
+            <th>Équipe</th>
+            <th style="width:100px;">Catégorie</th>
+            <th>Équipier 1</th>
+            <th>Équipier 2</th>
+            <th style="width:90px;"></th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div class="empty" id="empty-state" style="display:none;">Aucun dossard enregistré pour le moment.</div>
+    </section>
+
+    <section class="card card-danger">
+      <h2>Zone sensible</h2>
+      <p class="sub">Supprime définitivement toutes les équipes inscrites (et les temps associés). Les réglages du chronomètre de course ne sont pas affectés.</p>
+      <button class="btn-danger" id="reset-teams-btn">Réinitialiser toutes les inscriptions</button>
+    </section>
+  </div>
+
+  <div class="screen" data-screen="chrono">
+    <section class="card chrono-card">
+      <div class="chrono-left">
+        <div>
+          <p class="chrono-status" id="chrono-status">Course non démarrée</p>
+          <div class="chrono-display" id="chrono-display">00:00:00</div>
+        </div>
+      </div>
+      <div class="actions" style="margin:0;">
+        <button class="btn-start" id="start-race-btn">Démarrer le chrono</button>
+        <button class="btn-ghost" id="reset-race-btn" style="display:none;">Remettre le chrono à zéro</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Saisie rapide d'un temps</h2>
+      <p class="sub" style="margin-bottom:16px;">Saisissez un numéro de dossard et l'étape franchie : le temps est calculé automatiquement depuis la dernière validation de cette équipe.</p>
+      <div class="quick-grid">
+        <div class="field">
+          <label for="qk-dossard">Dossard</label>
+          <input id="qk-dossard" type="text" inputmode="numeric" placeholder="042">
+        </div>
+        <div class="field">
+          <label for="qk-stage">Étape</label>
+          <select id="qk-stage">
+            <option value="tangram">Fin Tangram</option>
+            <option value="runbike">Fin Run&amp;Bike</option>
+            <option value="vtt">Fin VTT'O</option>
+            <option value="co">Fin CO</option>
+            <option value="fin">Temps final</option>
+          </select>
+        </div>
+        <button class="btn-primary" id="qk-submit">Valider le temps</button>
+      </div>
+      <p class="quick-feedback" id="qk-feedback"></p>
+    </section>
+
+    <section class="card">
+      <h2>Suivi des étapes</h2>
+      <p class="sub" style="margin-bottom:16px;">Enregistrez le passage de chaque équipe à la fin de chaque épreuve. Le temps affiché correspond à la durée depuis le départ ou depuis l'étape précédente.</p>
+      <table class="stage-table">
+        <thead>
+          <tr>
+            <th style="width:70px;">Dossard</th>
+            <th>Équipe</th>
+            <th>Fin Tangram</th>
+            <th>Fin Run&amp;Bike</th>
+            <th>Fin VTT'O</th>
+            <th>Fin CO</th>
+            <th>Tir à l'arc</th>
+            <th>Temps final</th>
+          </tr>
+        </thead>
+        <tbody id="stage-body"></tbody>
+      </table>
+      <div class="empty" id="stage-empty" style="display:none;">Ajoutez une équipe pour commencer le suivi des étapes.</div>
+    </section>
+  </div>
+
+  <div class="screen" data-screen="classement">
+    <section class="card">
+      <div class="toolbar" style="margin-bottom:0;">
+        <h2 style="margin:0;">Filtrer les classements</h2>
+        <div class="field" style="width:220px; margin:0;">
+          <select id="category-filter">
+            <option value="all">Toutes catégories</option>
+            <option value="Mixte">Mixte</option>
+            <option value="Hommes">Hommes</option>
+            <option value="Femmes">Femmes</option>
+          </select>
+        </div>
+      </div>
+      <p class="sub" style="margin:10px 0 0;">S'applique au classement par épreuve, au classement provisoire et au classement final ci-dessous.</p>
+    </section>
+
+    <section class="card">
+      <h2>Classement par épreuve</h2>
+      <div class="stage-tabs" id="rank-tabs"></div>
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>Dossard</th>
+            <th>Équipe</th>
+            <th>Temps</th>
+          </tr>
+        </thead>
+        <tbody id="rank-body"></tbody>
+      </table>
+      <div class="empty" id="rank-empty" style="display:none;">Aucun temps enregistré pour cette épreuve.</div>
+    </section>
+
+    <section class="card">
+      <h2>Classement provisoire (cumul depuis le départ)</h2>
+      <p class="sub" style="margin-bottom:16px;">Classement général basé sur le temps total écoulé depuis le départ jusqu'à la dernière étape validée par chaque équipe (pénalités et bonus tir à l'arc inclus). Les équipes hors délai ne sont pas incluses.</p>
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>Dossard</th>
+            <th>Équipe</th>
+            <th>Dernière étape</th>
+            <th>Cumul</th>
+          </tr>
+        </thead>
+        <tbody id="provisional-body"></tbody>
+      </table>
+      <div class="empty" id="provisional-empty" style="display:none;">Aucune équipe n'a encore validé d'étape.</div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2 style="margin:0;">Classement final</h2>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-ghost" id="export-final-btn">Exporter en CSV</button>
+          <button class="btn-ghost" id="export-all-btn">Exporter tous les résultats</button>
+          <button class="btn-ghost" id="export-rankings-btn">Exporter les classements détaillés</button>
+        </div>
+      </div>
+      <p class="sub" style="margin:10px 0 16px;">Détail par épreuve (temps et pénalités) pour les équipes ayant terminé les 4 épreuves. Classement trié par temps total ajusté des pénalités.</p>
+      <table class="final-table">
+        <thead>
+          <tr>
+            <th>Rang</th>
+            <th>Dossard</th>
+            <th>Équipe</th>
+            <th>Tangram</th>
+            <th>Run&amp;Bike</th>
+            <th>VTT'O</th>
+            <th>CO</th>
+            <th>Tir à l'arc</th>
+            <th>Temps final</th>
+          </tr>
+        </thead>
+        <tbody id="final-body"></tbody>
+      </table>
+      <div class="empty" id="final-empty" style="display:none;">Aucune équipe n'a encore terminé les 4 épreuves.</div>
+    </section>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'dossards';
+let entries = [];
+let editingId = null;
+
+const els = {
+  dossard: document.getElementById('in-dossard'),
+  equipe: document.getElementById('in-equipe'),
+  categorie: document.getElementById('in-categorie'),
+  nom1: document.getElementById('in-nom1'),
+  prenom1: document.getElementById('in-prenom1'),
+  nom2: document.getElementById('in-nom2'),
+  prenom2: document.getElementById('in-prenom2'),
+  err: document.getElementById('form-err'),
+  submitBtn: document.getElementById('submit-btn'),
+  cancelBtn: document.getElementById('cancel-btn'),
+  formTitle: document.getElementById('form-title'),
+  search: document.getElementById('search'),
+  tbody: document.getElementById('table-body'),
+  empty: document.getElementById('empty-state'),
+  count: document.getElementById('count-label'),
+  exportBtn: document.getElementById('export-btn'),
+  chronoStatus: document.getElementById('chrono-status'),
+  chronoDisplay: document.getElementById('chrono-display'),
+  startRaceBtn: document.getElementById('start-race-btn'),
+  resetRaceBtn: document.getElementById('reset-race-btn'),
+  stageBody: document.getElementById('stage-body'),
+  stageEmpty: document.getElementById('stage-empty'),
+  qkDossard: document.getElementById('qk-dossard'),
+  qkStage: document.getElementById('qk-stage'),
+  qkSubmit: document.getElementById('qk-submit'),
+  qkFeedback: document.getElementById('qk-feedback'),
+  rankTabs: document.getElementById('rank-tabs'),
+  rankBody: document.getElementById('rank-body'),
+  rankEmpty: document.getElementById('rank-empty'),
+  saveStatus: document.getElementById('save-status'),
+  saveStatusText: document.getElementById('save-status-text'),
+  saveRetryBtn: document.getElementById('save-retry-btn'),
+  navTabs: document.getElementById('nav-tabs'),
+  screens: document.querySelectorAll('.screen'),
+  backupBtn: document.getElementById('backup-btn'),
+  resetTeamsBtn: document.getElementById('reset-teams-btn'),
+  importBtn: document.getElementById('import-btn'),
+  importFile: document.getElementById('import-file'),
+  finalBody: document.getElementById('final-body'),
+  finalEmpty: document.getElementById('final-empty'),
+  provisionalBody: document.getElementById('provisional-body'),
+  provisionalEmpty: document.getElementById('provisional-empty'),
+  categoryFilter: document.getElementById('category-filter'),
+  exportFinalBtn: document.getElementById('export-final-btn'),
+  exportAllBtn: document.getElementById('export-all-btn'),
+  exportRankingsBtn: document.getElementById('export-rankings-btn'),
+};
+
+const RACE_KEY = 'race';
+const CHECKPOINTS_KEY = 'checkpoints';
+const STAGES = [
+  { key: 'tangram', label: 'Fin Tangram', timed: true },
+  { key: 'runbike', label: 'Fin Run&Bike', timed: true },
+  { key: 'vtt', label: "Fin VTT'O", timed: true },
+  { key: 'co', label: 'Fin CO', timed: true },
+  { key: 'tir', label: "Tir à l'arc", timed: false, bonus: true },
+  { key: 'fin', label: 'Temps final', timed: true },
+];
+const BASE_STAGE_KEYS = ['tangram', 'runbike', 'vtt', 'co'];
+const PENALTY_STAGE_KEYS = BASE_STAGE_KEYS;
+const TIMESTAMP_KEYS = STAGES.filter(s => s.timed !== false).map(s => s.key);
+let race = { startedAt: null };
+let checkpoints = {};
+let chronoInterval = null;
+let selectedRankStage = STAGES[0].key;
+let selectedCategoryFilter = 'all';
+
+function categoryFilteredEntries() {
+  if (selectedCategoryFilter === 'all') return entries;
+  return entries.filter(e => (e.categorie || 'Mixte') === selectedCategoryFilter);
+}
+
+let pendingSaves = 0;
+let failedSaves = {};
+
+// =====================================================================
+//  CONFIGURATION SUPABASE — à remplacer par les valeurs de votre projet
+//  (Supabase > Project Settings > API Keys / bouton « Connect »)
+// =====================================================================
+const SUPABASE_URL = 'https://toxfvjznwxoruygbdsak.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_fs1KmbnZqjLv9hpgt7ekhw_bHl6vwS3';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let dataReady = false;
+let realtimeChannel = null;
+
+// ---------------------------------------------------------------------
+//  Synchronisation « ligne par ligne »
+//  Chaque équipe et chaque information de course (un temps, une pénalité,
+//  un statut) est une ligne distincte en base. On n'envoie que ce qui a
+//  changé localement depuis la dernière synchronisation : un autre poste
+//  qui modifie une autre information n'est donc jamais écrasé.
+// ---------------------------------------------------------------------
+const FIELD_SEP = '\u0001';
+let syncedTeams = {};   // id équipe -> JSON canonique de l'équipe en base
+let syncedFields = {};  // "idEquipe␁champ" -> JSON canonique de la valeur en base
+let syncedRace = null;  // JSON canonique de startedAt en base
+let teamRev = {};       // id équipe -> version en base la plus récente connue
+let fieldRev = {};      // "idEquipe␁champ" -> version en base la plus récente connue
+
+// JSON avec clés triées, pour comparer des objets indépendamment de l'ordre
+function canon(v) {
+  if (v === undefined) return undefined;
+  if (v === null || typeof v !== 'object') return JSON.stringify(v);
+  if (Array.isArray(v)) return '[' + v.map(x => canon(x) ?? 'null').join(',') + ']';
+  return '{' + Object.keys(v).sort()
+    .filter(k => v[k] !== undefined)
+    .map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
+}
+
+function flattenCheckpoints(cps) {
+  const out = {};
+  Object.entries(cps || {}).forEach(([teamId, cp]) => {
+    if (!cp) return;
+    Object.entries(cp).forEach(([k, v]) => {
+      if (k === 'penalties') {
+        Object.entries(v || {}).forEach(([stage, n]) => {
+          if (n !== undefined && n !== null) out[teamId + FIELD_SEP + 'pen:' + stage] = n;
+        });
+      } else if (v !== undefined && v !== null) {
+        out[teamId + FIELD_SEP + k] = v;
+      }
+    });
+  });
+  return out;
+}
+
+function setLocalField(teamId, field, value) {
+  if (!checkpoints[teamId]) checkpoints[teamId] = {};
+  const cp = checkpoints[teamId];
+  if (field.startsWith('pen:')) {
+    if (!cp.penalties) cp.penalties = {};
+    if (value === undefined) delete cp.penalties[field.slice(4)];
+    else cp.penalties[field.slice(4)] = value;
+  } else if (value === undefined) {
+    delete cp[field];
+  } else {
+    cp[field] = value;
+  }
+}
+
+function teamRow(team) {
+  return { id: team.id, dossard: String(team.dossard), data: team, updated_at: new Date().toISOString() };
+}
+
+async function fetchAll(table, columns) {
+  const pageSize = 1000;
+  let from = 0;
+  const rows = [];
+  for (;;) {
+    const { data, error } = await sb.from(table).select(columns).range(from, from + pageSize - 1);
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < pageSize) return rows;
+    from += pageSize;
+  }
+}
+
+function check(res) {
+  if (res.error) throw res.error;
+  return res.data;
+}
+
+// Deux postes ont attribué le même dossard au même moment : on récupère
+// les équipes de la base et on renumérote l'équipe saisie ici.
+async function resolveDossardConflicts() {
+  const remote = await fetchAll('teams', 'id, data, rev');
+  remote.forEach(r => {
+    if (!entries.some(e => e.id === r.id)) {
+      entries.push(r.data);
+      syncedTeams[r.id] = canon(r.data);
+      teamRev[r.id] = Math.max(teamRev[r.id] || 0, r.rev);
+    }
+  });
+  const messages = [];
+  entries.forEach(e => {
+    if (syncedTeams[e.id] === canon(e)) return;
+    const clash = entries.some(o => o.id !== e.id && String(o.dossard) === String(e.dossard));
+    if (clash) {
+      const old = e.dossard;
+      e.dossard = nextDossardNumber();
+      messages.push('Le dossard ' + old + ' venait d\'être attribué sur un autre poste : l\'équipe « ' + (e.equipe || '') + ' » reçoit le dossard ' + e.dossard + '.');
+    }
+  });
+  if (messages.length) alert(messages.join('\n'));
+  scheduleRender();
+}
+
+async function pushChanges() {
+  // 1. Équipes supprimées, puis ajoutées ou modifiées
+  const liveIds = new Set(entries.map(e => e.id));
+  const removedTeams = Object.keys(syncedTeams).filter(id => !liveIds.has(id));
+  if (removedTeams.length) {
+    check(await sb.from('teams').delete().in('id', removedTeams));
+    removedTeams.forEach(id => { delete syncedTeams[id]; });
+  }
+  for (let round = 0; ; round++) {
+    const current = {};
+    entries.forEach(e => { current[e.id] = canon(e); });
+    const upserts = entries.filter(e => syncedTeams[e.id] !== current[e.id]);
+    if (upserts.length === 0) break;
+    const { data: saved, error } = await sb.from('teams').upsert(upserts.map(teamRow)).select('id, rev');
+    if (error && error.code === '23505' && round < 3) {
+      await resolveDossardConflicts();
+      continue;
+    }
+    if (error) throw error;
+    upserts.forEach(e => { syncedTeams[e.id] = current[e.id]; });
+    (saved || []).forEach(r => { teamRev[r.id] = Math.max(teamRev[r.id] || 0, r.rev); });
+  }
+
+  // 2. Temps, pénalités, statuts : uniquement les champs modifiés
+  const flat = flattenCheckpoints(checkpoints);
+  const changed = Object.keys(flat).filter(k => syncedFields[k] !== canon(flat[k]));
+  if (changed.length) {
+    const rows = changed.map(k => {
+      const [team_id, field] = k.split(FIELD_SEP);
+      return { team_id, field, value: flat[k], updated_at: new Date().toISOString() };
+    });
+    const saved = check(await sb.from('cp_fields').upsert(rows).select('team_id, field, rev'));
+    changed.forEach(k => { syncedFields[k] = canon(flat[k]); });
+    (saved || []).forEach(r => {
+      const k = r.team_id + FIELD_SEP + r.field;
+      fieldRev[k] = Math.max(fieldRev[k] || 0, r.rev);
+    });
+  }
+  // État relu maintenant : une valeur reçue d'un autre poste pendant
+  // l'envoi ci-dessus ne doit surtout pas être prise pour une suppression.
+  const flatNow = flattenCheckpoints(checkpoints);
+  const removedFields = Object.keys(syncedFields).filter(k => !(k in flatNow));
+  if (removedFields.length) {
+    const byTeam = {};
+    removedFields.forEach(k => {
+      const [teamId, field] = k.split(FIELD_SEP);
+      (byTeam[teamId] = byTeam[teamId] || []).push(field);
+    });
+    for (const [teamId, fields] of Object.entries(byTeam)) {
+      check(await sb.from('cp_fields').delete().eq('team_id', teamId).in('field', fields));
+    }
+    removedFields.forEach(k => { delete syncedFields[k]; });
+  }
+
+  // 3. Chrono (remise à zéro ou import ; le démarrage passe par start_race)
+  const raceNow = canon(race.startedAt ?? null);
+  if (raceNow !== syncedRace) {
+    check(await sb.from('race_state').upsert({ id: 1, started_at: race.startedAt ?? null, updated_at: new Date().toISOString() }));
+    syncedRace = raceNow;
+  }
+}
+
+// Toutes les écritures passent par une file : elles partent dans l'ordre,
+// une à la fois.
+let saveQueue = Promise.resolve();
+
+function setSaveStatus(state, text) {
+  els.saveStatus.className = 'save-status' + (state === 'idle' ? '' : ' ' + state);
+  els.saveStatusText.textContent = text;
+  els.saveRetryBtn.style.display = state === 'error' ? 'inline-block' : 'none';
+}
+
+function runSaving(task, attempts = 3) {
+  pendingSaves++;
+  setSaveStatus('saving', 'Enregistrement…');
+  const job = async () => {
+    let ok = false;
+    for (let attempt = 1; attempt <= attempts && !ok; attempt++) {
+      try {
+        await task();
+        ok = true;
+      } catch (e) {
+        console.error(e);
+        if (attempt < attempts) await new Promise(r => setTimeout(r, 400 * attempt));
+      }
+    }
+    pendingSaves = Math.max(0, pendingSaves - 1);
+    if (ok) {
+      delete failedSaves.sync;
+      if (pendingSaves === 0) {
+        const now = new Date().toLocaleTimeString('fr-FR', { hour12: false });
+        setSaveStatus('idle', 'Enregistré à ' + now);
+      }
+    } else {
+      failedSaves.sync = true;
+      setSaveStatus('error', "Échec de l'enregistrement — vos dernières actions ne sont pas sauvegardées.");
+    }
+    return ok;
+  };
+  saveQueue = saveQueue.then(job, job);
+  return saveQueue;
+}
+
+function flush() {
+  if (!dataReady) return Promise.resolve(false);
+  return runSaving(pushChanges);
+}
+
+async function retryFailedSaves() {
+  setSaveStatus('saving', 'Nouvelle tentative…');
+  await flush();
+}
+
+// Lit l'état complet depuis la base et le prend comme référence
+async function fetchState() {
+  const [teamRows, fieldRows, raceRows] = await Promise.all([
+    fetchAll('teams', 'id, data, rev'),
+    fetchAll('cp_fields', 'team_id, field, value, rev'),
+    fetchAll('race_state', 'started_at'),
+  ]);
+  entries = teamRows.map(r => r.data);
+  syncedTeams = {};
+  teamRev = {};
+  teamRows.forEach(r => { syncedTeams[r.id] = canon(r.data); teamRev[r.id] = r.rev; });
+  checkpoints = {};
+  syncedFields = {};
+  fieldRev = {};
+  fieldRows.forEach(r => {
+    const k = r.team_id + FIELD_SEP + r.field;
+    setLocalField(r.team_id, r.field, r.value);
+    syncedFields[k] = canon(r.value);
+    fieldRev[k] = r.rev;
+  });
+  const startedAt = raceRows[0] ? raceRows[0].started_at : null;
+  race = { startedAt: startedAt === null ? null : Number(startedAt) };
+  syncedRace = canon(race.startedAt);
+}
+
+async function load() {
+  dataReady = false;
+  document.getElementById('load-error').hidden = true;
+  setSaveStatus('saving', 'Chargement des données…');
+  try {
+    await fetchState();
+  } catch (e) {
+    console.error(e);
+    // On n'écrase surtout pas la base avec des données vides
+    document.getElementById('load-error').hidden = false;
+    setSaveStatus('error', 'Données non chargées.');
+    return;
+  }
+  dataReady = true;
+  setSaveStatus('idle', 'Données chargées depuis la base');
+  subscribeRealtime();
+  render();
+  refreshNextDossard();
+  renderChrono();
+  renderStages();
+  renderRankTabs();
+  renderRanking();
+}
+
+function nextDossardNumber() {
+  const max = entries.reduce((m, e) => {
+    const n = parseInt(e.dossard, 10);
+    return !isNaN(n) && n > m ? n : m;
+  }, 0);
+  return String(max + 1);
+}
+
+function refreshNextDossard() {
+  if (!editingId) {
+    els.dossard.value = nextDossardNumber();
+  }
+}
+
+async function persist() {
+  await flush();
+}
+
+async function persistRace() {
+  await flush();
+}
+
+async function persistCheckpoints() {
+  await flush();
+}
+
+function formatClock(ms) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = n => String(n).padStart(2, '0');
+  return pad(h) + ':' + pad(m) + ':' + pad(s);
+}
+
+function renderChrono() {
+  if (race.startedAt) {
+    els.chronoStatus.textContent = 'Course en cours';
+    els.chronoDisplay.classList.add('running');
+    els.chronoDisplay.textContent = formatClock(Date.now() - race.startedAt);
+    els.startRaceBtn.disabled = true;
+    els.startRaceBtn.textContent = 'Chrono lancé';
+    els.resetRaceBtn.style.display = 'inline-block';
+    if (!chronoInterval) {
+      chronoInterval = setInterval(() => {
+        els.chronoDisplay.textContent = formatClock(Date.now() - race.startedAt);
+      }, 1000);
+    }
+  } else {
+    els.chronoStatus.textContent = 'Course non démarrée';
+    els.chronoDisplay.classList.remove('running');
+    els.chronoDisplay.textContent = '00:00:00';
+    els.startRaceBtn.disabled = false;
+    els.startRaceBtn.textContent = 'Démarrer le chrono';
+    els.resetRaceBtn.style.display = 'none';
+    if (chronoInterval) {
+      clearInterval(chronoInterval);
+      chronoInterval = null;
+    }
+  }
+}
+
+async function startRace() {
+  if (race.startedAt || !dataReady) return;
+  els.startRaceBtn.disabled = true;
+  const proposed = Date.now();
+  // La base ne garde que la première heure de départ si deux postes
+  // démarrent le chrono en même temps.
+  await runSaving(async () => {
+    const v = check(await sb.rpc('start_race', { p_started_at: proposed }));
+    race = { startedAt: v === null ? null : Number(v) };
+    syncedRace = canon(race.startedAt);
+  });
+  renderChrono();
+  renderStages();
+  renderRanking();
+}
+
+async function resetRace() {
+  if (!confirm("Réinitialiser le chrono et effacer tous les temps d'étape enregistrés ?")) return;
+  race = { startedAt: null };
+  checkpoints = {};
+  await persistRace();
+  await persistCheckpoints();
+  renderChrono();
+  renderStages();
+  renderRanking();
+}
+
+async function recordStage(teamId, stageKey) {
+  if (!race.startedAt) return;
+  if (!checkpoints[teamId]) checkpoints[teamId] = {};
+  const cp = checkpoints[teamId];
+  cp[stageKey] = Date.now();
+
+  if (BASE_STAGE_KEYS.includes(stageKey)) {
+    const allDone = BASE_STAGE_KEYS.every(k => cp[k]);
+    if (allDone && !cp['fin']) {
+      cp['fin'] = Math.max(...BASE_STAGE_KEYS.map(k => cp[k]));
+      cp['finAuto'] = true;
+    }
+  }
+
+  await persistCheckpoints();
+  renderStages();
+  renderRanking();
+}
+
+async function editStageTime(teamId, stageKey) {
+  const cp = checkpoints[teamId] || {};
+  const current = cp[stageKey];
+  if (!current) return;
+
+  const currentDate = new Date(current);
+  const hh = String(currentDate.getHours()).padStart(2, '0');
+  const mm = String(currentDate.getMinutes()).padStart(2, '0');
+  const ss = String(currentDate.getSeconds()).padStart(2, '0');
+
+  const input = prompt('Heure de passage (HH:MM:SS) :', `${hh}:${mm}:${ss}`);
+  if (input === null) return;
+
+  const match = input.trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!match) {
+    alert('Format invalide. Utilisez HH:MM:SS (ex. 14:32:05).');
+    return;
+  }
+  const h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  const s = match[3] ? parseInt(match[3], 10) : 0;
+  if (h > 23 || m > 59 || s > 59) {
+    alert('Heure invalide.');
+    return;
+  }
+
+  const newDate = new Date(currentDate);
+  newDate.setHours(h, m, s, 0);
+
+  const cpNow = checkpoints[teamId];
+  cpNow[stageKey] = newDate.getTime();
+
+  if (stageKey === 'fin') {
+    cpNow.finAuto = false;
+  } else if (BASE_STAGE_KEYS.includes(stageKey)) {
+    const allDone = BASE_STAGE_KEYS.every(k => cpNow[k]);
+    if (allDone && cpNow.finAuto !== false) {
+      cpNow['fin'] = Math.max(...BASE_STAGE_KEYS.map(k => cpNow[k]));
+      cpNow.finAuto = true;
+    }
+  }
+
+  await persistCheckpoints();
+  renderStages();
+  renderRanking();
+}
+
+async function setTeamDNS(teamId, dns) {
+  if (!checkpoints[teamId]) checkpoints[teamId] = {};
+  if (dns) {
+    const confirmed = confirm("Marquer cette équipe hors délai ?\n\nLe temps final affichera DNS. L'équipe restera visible dans les classements par épreuve pour les temps déjà réalisés, mais n'apparaîtra pas dans le classement final.");
+    if (!confirmed) return;
+    checkpoints[teamId].dns = true;
+  } else {
+    checkpoints[teamId].dns = false;
+  }
+  await persistCheckpoints();
+  renderStages();
+  renderRanking();
+}
+
+function elapsedForStage(teamId, stageKey) {
+  const cp = checkpoints[teamId] || {};
+  const time = cp[stageKey];
+  if (!time) return null;
+  if (stageKey === 'fin') {
+    return race.startedAt ? time - race.startedAt : null;
+  }
+  const priorTimes = TIMESTAMP_KEYS
+    .filter(key => key !== stageKey && key !== 'fin' && cp[key] && cp[key] < time)
+    .map(key => cp[key]);
+  const prev = priorTimes.length ? Math.max(...priorTimes) : race.startedAt;
+  if (!prev) return null;
+  return time - prev;
+}
+
+const PENALTY_MINUTES = { tangram: 20, co: 10, vtt: 20, runbike: 20 };
+const ARCHERY_BONUS_SECONDS_PER_POINT = 10;
+
+function penaltyCount(teamId, stageKey) {
+  const cp = checkpoints[teamId];
+  return (cp && cp.penalties && cp.penalties[stageKey]) || 0;
+}
+
+function penaltyMsForTeamStage(teamId, stageKey) {
+  return penaltyCount(teamId, stageKey) * (PENALTY_MINUTES[stageKey] || 0) * 60000;
+}
+
+function totalPenaltyMs(teamId) {
+  return PENALTY_STAGE_KEYS.reduce((sum, k) => sum + penaltyMsForTeamStage(teamId, k), 0);
+}
+
+function totalPenaltyCount(teamId) {
+  return PENALTY_STAGE_KEYS.reduce((sum, k) => sum + penaltyCount(teamId, k), 0);
+}
+
+function archeryPoints(teamId) {
+  const cp = checkpoints[teamId];
+  return (cp && cp.archeryPoints) || 0;
+}
+
+function archeryBonusMs(teamId) {
+  return archeryPoints(teamId) * ARCHERY_BONUS_SECONDS_PER_POINT * 1000;
+}
+
+async function setArcheryPoints(teamId, rawValue) {
+  let points = parseInt(rawValue, 10);
+  if (isNaN(points) || points < 0) points = 0;
+  if (!checkpoints[teamId]) checkpoints[teamId] = {};
+  checkpoints[teamId].archeryPoints = points;
+  await persistCheckpoints();
+  renderStages();
+  renderRanking();
+  return points;
+}
+
+function adjustedElapsedForStage(teamId, stageKey) {
+  const raw = elapsedForStage(teamId, stageKey);
+  if (raw === null) return null;
+  if (stageKey === 'fin') {
+    const adjusted = raw + totalPenaltyMs(teamId) - archeryBonusMs(teamId);
+    return Math.max(0, adjusted);
+  }
+  return raw + penaltyMsForTeamStage(teamId, stageKey);
+}
+
+function lastReachedStageKey(teamId) {
+  const cp = checkpoints[teamId] || {};
+  let bestKey = null, bestTime = -Infinity;
+  TIMESTAMP_KEYS.forEach(key => {
+    if (cp[key] && cp[key] > bestTime) {
+      bestTime = cp[key];
+      bestKey = key;
+    }
+  });
+  return bestKey;
+}
+
+function stageLabel(key) {
+  if (key === 'fin') return 'Terminé';
+  const stage = STAGES.find(s => s.key === key);
+  return stage ? stage.label : '';
+}
+
+const STAGE_PROGRESS_PRIORITY = { fin: 5, co: 4, vtt: 3, runbike: 2, tangram: 1 };
+
+function cumulativeElapsedForTeam(teamId) {
+  const key = lastReachedStageKey(teamId);
+  if (!key || !race.startedAt) return null;
+  const cp = checkpoints[teamId] || {};
+  const raw = cp[key] - race.startedAt;
+  const adjusted = raw + totalPenaltyMs(teamId) - archeryBonusMs(teamId);
+  return Math.max(0, adjusted);
+}
+
+function renderProvisionalClassement() {
+  const ranked = categoryFilteredEntries()
+    .filter(team => !((checkpoints[team.id] || {}).dns))
+    .map(team => {
+      const stageKey = lastReachedStageKey(team.id);
+      if (!stageKey) return null;
+      const elapsed = cumulativeElapsedForTeam(team.id);
+      if (elapsed === null) return null;
+      return { team, elapsed, stageKey };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      const pa = STAGE_PROGRESS_PRIORITY[a.stageKey] || 0;
+      const pb = STAGE_PROGRESS_PRIORITY[b.stageKey] || 0;
+      if (pa !== pb) return pb - pa;
+      return a.elapsed - b.elapsed;
+    });
+
+  if (ranked.length === 0) {
+    els.provisionalBody.innerHTML = '';
+    els.provisionalEmpty.style.display = 'block';
+    return;
+  }
+  els.provisionalEmpty.style.display = 'none';
+
+  els.provisionalBody.innerHTML = ranked.map((r, i) => {
+    const rank = i + 1;
+    const podiumClass = rank <= 3 ? 'podium-' + rank : '';
+    return `
+      <tr class="${podiumClass}">
+        <td><span class="rank-num">${rank}</span></td>
+        <td><span class="bib">${escapeHtml(r.team.dossard)}</span></td>
+        <td>${escapeHtml(r.team.equipe || '')}</td>
+        <td><span class="stage-abs">${stageLabel(r.stageKey)}</span></td>
+        <td><span class="rank-time">${formatClock(r.elapsed)}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function adjustPenalty(teamId, stageKey, delta) {
+  if (!dataReady) return null;
+  let result = null;
+  // Incrément calculé par la base : deux clics simultanés sur deux postes
+  // s'additionnent. Pas de nouvelle tentative automatique, pour ne jamais
+  // compter deux fois le même clic.
+  await runSaving(async () => {
+    const res = check(await sb.rpc('adjust_penalty', { p_team: teamId, p_stage: stageKey, p_delta: delta }));
+    const key = teamId + FIELD_SEP + 'pen:' + stageKey;
+    result = Number(res.value);
+    // Une valeur plus récente (clic sur un autre poste) a peut-être déjà été reçue
+    if (res.rev > (fieldRev[key] || 0)) {
+      fieldRev[key] = res.rev;
+      setLocalField(teamId, 'pen:' + stageKey, result);
+      syncedFields[key] = canon(result);
+    }
+  }, 1);
+  renderStages();
+  renderRanking();
+  return result;
+}
+
+function renderStages() {
+  if (entries.length === 0) {
+    els.stageBody.innerHTML = '';
+    els.stageEmpty.style.display = 'block';
+    return;
+  }
+  els.stageEmpty.style.display = 'none';
+
+  const sorted = entries.slice().sort((a, b) => (parseInt(a.dossard,10) || 0) - (parseInt(b.dossard,10) || 0));
+
+  els.stageBody.innerHTML = sorted.map(team => {
+    const cp = checkpoints[team.id] || {};
+    const cells = STAGES.map(stage => {
+      let cellHtml;
+
+      if (stage.timed === false) {
+        if (stage.bonus) {
+          const points = archeryPoints(team.id);
+          const bonusMs = archeryBonusMs(team.id);
+          cellHtml = `
+            <div class="stage-cell">
+              <div class="archery-input">
+                <input type="number" min="0" step="1" inputmode="numeric" class="archery-points-input" data-team="${team.id}" value="${points}">
+                <span class="archery-unit">pts</span>
+              </div>
+              ${bonusMs > 0 ? `<span class="archery-bonus">−${formatClock(bonusMs)} bonus</span>` : '<span class="stage-abs">Aucun bonus</span>'}
+            </div>`;
+        } else {
+          const count = penaltyCount(team.id, stage.key);
+          cellHtml = `
+            <div class="stage-cell">
+              <div class="pen-stepper">
+                <button class="pen-btn" data-team="${team.id}" data-stage="${stage.key}" data-delta="-1" ${count === 0 ? 'disabled' : ''}>−</button>
+                <span class="pen-count">${count} pén.</span>
+                <button class="pen-btn" data-team="${team.id}" data-stage="${stage.key}" data-delta="1">+</button>
+              </div>
+            </div>`;
+        }
+        return `<td data-label="${stage.label}">${cellHtml}</td>`;
+      }
+
+      if (stage.key === 'fin') {
+        if (cp.dns) {
+          cellHtml = `
+            <div class="stage-cell">
+              <span class="dns-badge">DNS</span>
+              <span class="stage-abs">Hors délai</span>
+              <button class="dns-btn" data-team="${team.id}" data-dns="0">Annuler</button>
+            </div>`;
+        } else if (cp.fin) {
+          const elapsed = adjustedElapsedForStage(team.id, 'fin');
+          const elapsedLabel = elapsed !== null ? formatClock(elapsed) : '—';
+          const abs = new Date(cp.fin).toLocaleTimeString('fr-FR', { hour12: false });
+          const editBtn = `<button class="edit-time-btn" data-team="${team.id}" data-stage="fin" aria-label="Modifier l'heure de passage" title="Modifier l'heure de passage">✎</button>`;
+          const totalPen = totalPenaltyCount(team.id);
+          const points = archeryPoints(team.id);
+          const penBadge = totalPen > 0
+            ? `<span class="pen-badge">${totalPen} pén.</span>`
+            : '';
+          const bonusBadge = points > 0
+            ? `<span class="bonus-badge">${points} pts tir (−${formatClock(archeryBonusMs(team.id))})</span>`
+            : '';
+          cellHtml = `<div class="stage-cell"><span class="stage-time">${elapsedLabel}</span><div class="abs-row"><span class="stage-abs">${abs}</span>${editBtn}</div>${penBadge}${bonusBadge}</div>`;
+        } else {
+          const canRecord = !!race.startedAt;
+          cellHtml = `
+            <div class="stage-cell">
+              <button class="stage-btn" ${canRecord ? '' : 'disabled'} data-team="${team.id}" data-stage="fin">${stage.label}</button>
+              <button class="dns-btn" ${canRecord ? '' : 'disabled'} data-team="${team.id}" data-dns="1">Hors délai</button>
+            </div>`;
+        }
+        return `<td data-label="${stage.label}">${cellHtml}</td>`;
+      }
+
+      const done = cp[stage.key];
+      if (done) {
+        const elapsed = adjustedElapsedForStage(team.id, stage.key);
+        const elapsedLabel = elapsed !== null ? formatClock(elapsed) : '—';
+        const abs = new Date(done).toLocaleTimeString('fr-FR', { hour12: false });
+        const editBtn = `<button class="edit-time-btn" data-team="${team.id}" data-stage="${stage.key}" aria-label="Modifier l'heure de passage" title="Modifier l'heure de passage">✎</button>`;
+        const count = penaltyCount(team.id, stage.key);
+        const unit = PENALTY_MINUTES[stage.key];
+        cellHtml = `
+          <div class="stage-cell">
+            <span class="stage-time">${elapsedLabel}</span>
+            <div class="abs-row"><span class="stage-abs">${abs}</span>${editBtn}</div>
+            <div class="pen-stepper">
+              <button class="pen-btn" data-team="${team.id}" data-stage="${stage.key}" data-delta="-1" ${count === 0 ? 'disabled' : ''}>−</button>
+              <span class="pen-count">${count} pén.</span>
+              <button class="pen-btn" data-team="${team.id}" data-stage="${stage.key}" data-delta="1">+</button>
+            </div>
+            <span class="pen-unit">${unit} min / pén.</span>
+          </div>`;
+      } else {
+        const canRecord = !!race.startedAt;
+        cellHtml = `<button class="stage-btn" ${canRecord ? '' : 'disabled'} data-team="${team.id}" data-stage="${stage.key}">${stage.label}</button>`;
+      }
+      return `<td data-label="${stage.label}">${cellHtml}</td>`;
+    }).join('');
+    return `
+      <tr>
+        <td data-label="Dossard"><span class="bib">${escapeHtml(team.dossard)}</span></td>
+        <td data-label="Équipe">${escapeHtml(team.equipe || '')}</td>
+        ${cells}
+      </tr>
+    `;
+  }).join('');
+
+  els.stageBody.querySelectorAll('.stage-btn').forEach(btn => {
+    btn.addEventListener('click', () => recordStage(btn.dataset.team, btn.dataset.stage));
+  });
+  els.stageBody.querySelectorAll('.pen-btn').forEach(btn => {
+    btn.addEventListener('click', () => adjustPenalty(btn.dataset.team, btn.dataset.stage, parseInt(btn.dataset.delta, 10)));
+  });
+  els.stageBody.querySelectorAll('.archery-points-input').forEach(input => {
+    input.addEventListener('change', () => setArcheryPoints(input.dataset.team, input.value));
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        input.blur();
+      }
+    });
+  });
+  els.stageBody.querySelectorAll('.edit-time-btn').forEach(btn => {
+    btn.addEventListener('click', () => editStageTime(btn.dataset.team, btn.dataset.stage));
+  });
+  els.stageBody.querySelectorAll('.dns-btn').forEach(btn => {
+    btn.addEventListener('click', () => setTeamDNS(btn.dataset.team, btn.dataset.dns === '1'));
+  });
+}
+
+function renderRankTabs() {
+  els.rankTabs.innerHTML = STAGES.filter(stage => stage.timed !== false).map(stage => `
+    <button class="stage-tab ${stage.key === selectedRankStage ? 'active' : ''}" data-stage="${stage.key}">${stage.label}</button>
+  `).join('');
+  els.rankTabs.querySelectorAll('.stage-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedRankStage = btn.dataset.stage;
+      renderRanking();
+    });
+  });
+}
+
+function renderRanking() {
+  renderFinalClassement();
+  renderProvisionalClassement();
+  els.rankTabs.querySelectorAll('.stage-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.stage === selectedRankStage);
+  });
+
+  const ranked = categoryFilteredEntries()
+    .map(team => {
+      const time = (checkpoints[team.id] || {})[selectedRankStage];
+      if (!time) return null;
+      const elapsed = adjustedElapsedForStage(team.id, selectedRankStage);
+      const pen = selectedRankStage === 'fin' ? totalPenaltyCount(team.id) : penaltyCount(team.id, selectedRankStage);
+      return elapsed === null ? null : { team, elapsed, pen };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.elapsed - b.elapsed);
+
+  if (ranked.length === 0) {
+    els.rankBody.innerHTML = '';
+    els.rankEmpty.style.display = 'block';
+    return;
+  }
+  els.rankEmpty.style.display = 'none';
+
+  els.rankBody.innerHTML = ranked.map((r, i) => {
+    const rank = i + 1;
+    const podiumClass = rank <= 3 ? 'podium-' + rank : '';
+    const penHtml = r.pen > 0 ? `<span class="pen-badge">${r.pen} pén.</span>` : '';
+    return `
+      <tr class="${podiumClass}">
+        <td><span class="rank-num">${rank}</span></td>
+        <td><span class="bib">${escapeHtml(r.team.dossard)}</span></td>
+        <td>${escapeHtml(r.team.equipe || '')}</td>
+        <td><span class="rank-time">${formatClock(r.elapsed)}</span> ${penHtml}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function finalCellHtml(teamId, stageKey) {
+  const time = adjustedElapsedForStage(teamId, stageKey);
+  if (time === null) return '<span class="stage-abs">—</span>';
+  const pen = penaltyCount(teamId, stageKey);
+  const penHtml = pen > 0 ? `<span class="final-pen">+${pen} pén.</span>` : '';
+  return `<div class="final-cell"><span class="final-time">${formatClock(time)}</span>${penHtml}</div>`;
+}
+
+function finalArcheryCellHtml(teamId) {
+  const points = archeryPoints(teamId);
+  if (points === 0) return '<span class="stage-abs">—</span>';
+  const bonusMs = archeryBonusMs(teamId);
+  return `<div class="final-cell"><span class="final-bonus">${points} pts</span><span class="final-bonus-time">−${formatClock(bonusMs)}</span></div>`;
+}
+
+function renderFinalClassement() {
+  const finished = categoryFilteredEntries()
+    .filter(team => (checkpoints[team.id] || {}).fin)
+    .map(team => ({ team, total: adjustedElapsedForStage(team.id, 'fin') }))
+    .filter(r => r.total !== null)
+    .sort((a, b) => a.total - b.total);
+
+  if (finished.length === 0) {
+    els.finalBody.innerHTML = '';
+    els.finalEmpty.style.display = 'block';
+    return;
+  }
+  els.finalEmpty.style.display = 'none';
+
+  els.finalBody.innerHTML = finished.map((r, i) => {
+    const rank = i + 1;
+    const podiumClass = rank <= 3 ? 'podium-' + rank : '';
+    return `
+      <tr class="${podiumClass}">
+        <td data-label="Rang"><span class="rank-num">${rank}</span></td>
+        <td data-label="Dossard"><span class="bib">${escapeHtml(r.team.dossard)}</span></td>
+        <td data-label="Équipe">${escapeHtml(r.team.equipe || '')}</td>
+        <td data-label="Tangram">${finalCellHtml(r.team.id, 'tangram')}</td>
+        <td data-label="Run&amp;Bike">${finalCellHtml(r.team.id, 'runbike')}</td>
+        <td data-label="VTT'O">${finalCellHtml(r.team.id, 'vtt')}</td>
+        <td data-label="CO">${finalCellHtml(r.team.id, 'co')}</td>
+        <td data-label="Tir à l'arc">${finalArcheryCellHtml(r.team.id)}</td>
+        <td data-label="Temps final"><span class="final-total">${formatClock(r.total)}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function clearInvalid() {
+  [els.equipe, els.nom1, els.prenom1, els.nom2, els.prenom2].forEach(i => i.classList.remove('invalid'));
+  els.err.textContent = '';
+}
+
+function validate() {
+  clearInvalid();
+  const dossard = els.dossard.value.trim();
+  const equipe = els.equipe.value.trim();
+  const categorie = els.categorie.value;
+  const nom1 = els.nom1.value.trim();
+  const prenom1 = els.prenom1.value.trim();
+  const nom2 = els.nom2.value.trim();
+  const prenom2 = els.prenom2.value.trim();
+
+  if (!equipe) {
+    els.equipe.classList.add('invalid');
+    els.err.textContent = "Le nom d'équipe est obligatoire.";
+    return null;
+  }
+  if (!nom1 || !prenom1) {
+    if (!nom1) els.nom1.classList.add('invalid');
+    if (!prenom1) els.prenom1.classList.add('invalid');
+    els.err.textContent = 'Le nom et le prénom du premier équipier sont obligatoires.';
+    return null;
+  }
+  if (!nom2 || !prenom2) {
+    if (!nom2) els.nom2.classList.add('invalid');
+    if (!prenom2) els.prenom2.classList.add('invalid');
+    els.err.textContent = 'Le nom et le prénom du second équipier sont obligatoires.';
+    return null;
+  }
+  return { dossard, equipe, categorie, nom1, prenom1, nom2, prenom2 };
+}
+
+function resetForm() {
+  els.equipe.value = '';
+  els.categorie.value = 'Mixte';
+  els.nom1.value = '';
+  els.prenom1.value = '';
+  els.nom2.value = '';
+  els.prenom2.value = '';
+  clearInvalid();
+  editingId = null;
+  els.submitBtn.textContent = 'Ajouter l\'équipe';
+  els.formTitle.textContent = 'Ajouter une équipe';
+  els.cancelBtn.style.display = 'none';
+  refreshNextDossard();
+}
+
+function startEdit(id) {
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+  editingId = id;
+  els.dossard.value = entry.dossard;
+  els.equipe.value = entry.equipe;
+  els.categorie.value = entry.categorie || 'Mixte';
+  els.nom1.value = entry.nom1;
+  els.prenom1.value = entry.prenom1;
+  els.nom2.value = entry.nom2;
+  els.prenom2.value = entry.prenom2;
+  clearInvalid();
+  els.submitBtn.textContent = 'Enregistrer les modifications';
+  els.formTitle.textContent = 'Modifier l\'équipe — dossard ' + entry.dossard;
+  els.cancelBtn.style.display = 'inline-block';
+  els.dossard.focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteEntry(id) {
+  entries = entries.filter(e => e.id !== id);
+  delete checkpoints[id];
+  await persist();
+  await persistCheckpoints();
+  render();
+  refreshNextDossard();
+  renderStages();
+  renderRanking();
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render() {
+  const query = els.search.value.trim().toLowerCase();
+  const filtered = entries
+    .filter(e => {
+      if (!query) return true;
+      return e.dossard.toLowerCase().includes(query)
+        || (e.equipe || '').toLowerCase().includes(query)
+        || e.nom1.toLowerCase().includes(query)
+        || e.prenom1.toLowerCase().includes(query)
+        || e.nom2.toLowerCase().includes(query)
+        || e.prenom2.toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      const na = parseInt(a.dossard, 10);
+      const nb = parseInt(b.dossard, 10);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return a.dossard.localeCompare(b.dossard);
+    });
+
+  els.count.textContent = entries.length + (entries.length > 1 ? ' équipes' : ' équipe');
+
+  if (filtered.length === 0) {
+    els.tbody.innerHTML = '';
+    els.empty.style.display = 'block';
+    els.empty.textContent = entries.length === 0
+      ? 'Aucun dossard enregistré pour le moment.'
+      : 'Aucun résultat pour cette recherche.';
+    return;
+  }
+  els.empty.style.display = 'none';
+
+  els.tbody.innerHTML = filtered.map(e => `
+    <tr>
+      <td><span class="bib">${escapeHtml(e.dossard)}</span></td>
+      <td>${escapeHtml(e.equipe || '')}</td>
+      <td>${escapeHtml(e.categorie || 'Mixte')}</td>
+      <td>${escapeHtml(e.prenom1)} ${escapeHtml(e.nom1)}</td>
+      <td>${escapeHtml(e.prenom2)} ${escapeHtml(e.nom2)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" aria-label="Modifier" data-edit="${e.id}">✎</button>
+          <button class="icon-btn danger" aria-label="Supprimer l'équipe" data-delete="${e.id}" data-name="${escapeHtml(e.equipe || '')}">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  els.tbody.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => startEdit(btn.dataset.edit));
+  });
+  els.tbody.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.name || 'cette équipe';
+      if (confirm('Supprimer l\'équipe "' + name + '" ?')) {
+        deleteEntry(btn.dataset.delete);
+      }
+    });
+  });
+}
+
+els.submitBtn.addEventListener('click', async () => {
+  const data = validate();
+  if (!data) return;
+  if (editingId) {
+    const idx = entries.findIndex(e => e.id === editingId);
+    entries[idx] = { ...entries[idx], ...data };
+  } else {
+    entries.push({ id: (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)), ...data });
+  }
+  await persist();
+  resetForm();
+  render();
+  renderStages();
+  renderRanking();
+});
+
+els.cancelBtn.addEventListener('click', resetForm);
+els.categoryFilter.addEventListener('change', () => {
+  selectedCategoryFilter = els.categoryFilter.value;
+  renderRanking();
+});
+els.search.addEventListener('input', render);
+els.startRaceBtn.addEventListener('click', startRace);
+els.resetRaceBtn.addEventListener('click', resetRace);
+
+function showQkFeedback(message, isError) {
+  els.qkFeedback.textContent = message;
+  els.qkFeedback.className = 'quick-feedback ' + (isError ? 'error' : 'ok');
+}
+
+els.qkSubmit.addEventListener('click', async () => {
+  const dossard = els.qkDossard.value.trim();
+  const stageKey = els.qkStage.value;
+  const stage = STAGES.find(s => s.key === stageKey);
+
+  if (!dossard) {
+    showQkFeedback('Saisissez un numéro de dossard.', true);
+    return;
+  }
+  if (!race.startedAt) {
+    showQkFeedback("La course n'a pas encore démarré.", true);
+    return;
+  }
+  const team = entries.find(e => e.dossard === dossard);
+  if (!team) {
+    showQkFeedback('Aucune équipe ne porte le dossard ' + dossard + '.', true);
+    return;
+  }
+  const existing = (checkpoints[team.id] || {})[stageKey];
+  if (existing) {
+    const abs = new Date(existing).toLocaleTimeString('fr-FR', { hour12: false });
+    showQkFeedback('"' + stage.label + '" a déjà été enregistré pour le dossard ' + dossard + ' à ' + abs + '.', true);
+    return;
+  }
+  await recordStage(team.id, stageKey);
+  const elapsed = elapsedForStage(team.id, stageKey);
+  showQkFeedback(
+    'Dossard ' + dossard + ' (' + (team.equipe || '') + ') — ' + stage.label + ' : ' + formatClock(elapsed) + '.',
+    false
+  );
+  els.qkDossard.value = '';
+  els.qkDossard.focus();
+});
+
+els.qkDossard.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    els.qkSubmit.click();
+  }
+});
+
+els.saveRetryBtn.addEventListener('click', retryFailedSaves);
+
+window.addEventListener('beforeunload', (ev) => {
+  if (Object.keys(failedSaves).length > 0 || pendingSaves > 0) {
+    ev.preventDefault();
+    ev.returnValue = '';
+    return '';
+  }
+});
+
+[els.equipe, els.nom1, els.prenom1, els.nom2, els.prenom2].forEach(input => {
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      els.submitBtn.click();
+    }
+  });
+});
+
+els.exportBtn.addEventListener('click', () => {
+  if (entries.length === 0) return;
+  const header = 'Dossard;Equipe;Categorie;Nom1;Prenom1;Nom2;Prenom2';
+  const rows = entries
+    .slice()
+    .sort((a, b) => (parseInt(a.dossard,10) || 0) - (parseInt(b.dossard,10) || 0))
+    .map(e => [e.dossard, e.equipe || '', e.categorie || 'Mixte', e.nom1, e.prenom1, e.nom2, e.prenom2].join(';'));
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'dossards.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+els.backupBtn.addEventListener('click', () => {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    dossards: entries,
+    race,
+    checkpoints,
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sauvegarde-course-' + stamp + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+els.importBtn.addEventListener('click', () => {
+  els.importFile.value = '';
+  els.importFile.click();
+});
+
+els.importFile.addEventListener('change', async () => {
+  const file = els.importFile.files[0];
+  if (!file) return;
+
+  let data;
+  try {
+    const text = await file.text();
+    data = JSON.parse(text);
+  } catch (e) {
+    alert("Ce fichier n'est pas une sauvegarde valide (JSON illisible).");
+    return;
+  }
+
+  if (!data || !Array.isArray(data.dossards)) {
+    alert("Ce fichier ne correspond pas au format attendu d'une sauvegarde.");
+    return;
+  }
+
+  const summary = data.dossards.length + ' équipe(s)'
+    + (data.race && data.race.startedAt ? ', chrono en cours' : ', chrono arrêté')
+    + (data.checkpoints ? ', temps d\'étapes inclus' : '');
+
+  const confirmed = confirm(
+    'Importer cette sauvegarde (' + summary + ') ?\n\nCela remplacera toutes les données actuelles (équipes, chrono, temps). Cette action est irréversible.'
+  );
+  if (!confirmed) return;
+
+  entries = Array.isArray(data.dossards) ? data.dossards : [];
+  race = data.race && typeof data.race === 'object' ? data.race : { startedAt: null };
+  checkpoints = data.checkpoints && typeof data.checkpoints === 'object' ? data.checkpoints : {};
+
+  await persist();
+  await persistRace();
+  await persistCheckpoints();
+
+  resetForm();
+  render();
+  refreshNextDossard();
+  renderChrono();
+  renderStages();
+  renderRankTabs();
+  renderRanking();
+
+  alert('Sauvegarde importée avec succès.');
+});
+
+els.resetTeamsBtn.addEventListener('click', async () => {
+  if (entries.length === 0) {
+    alert('Aucune équipe inscrite à supprimer.');
+    return;
+  }
+  const confirmed = confirm(
+    'Supprimer définitivement les ' + entries.length + ' équipe(s) inscrite(s) et leurs temps enregistrés ?\n\nCette action est irréversible. Pensez à télécharger une sauvegarde avant si besoin.'
+  );
+  if (!confirmed) return;
+
+  entries = [];
+  checkpoints = {};
+  resetForm();
+  await persist();
+  await persistCheckpoints();
+  render();
+  refreshNextDossard();
+  renderStages();
+  renderRanking();
+});
+
+els.exportFinalBtn.addEventListener('click', () => {
+  const finished = entries
+    .filter(team => (checkpoints[team.id] || {}).fin)
+    .map(team => ({ team, total: adjustedElapsedForStage(team.id, 'fin') }))
+    .filter(r => r.total !== null)
+    .sort((a, b) => a.total - b.total);
+
+  if (finished.length === 0) {
+    alert("Aucune équipe n'a encore terminé les 4 épreuves.");
+    return;
+  }
+
+  const header = 'Rang;Dossard;Equipe;Categorie;Tangram;PenTangram;RunBike;PenRunBike;VTTO;PenVTTO;CO;PenCO;PtsTirArc;BonusTirArc;TempsFinal';
+  const rows = finished.map((r, i) => {
+    const t = r.team;
+    const cell = (stageKey) => {
+      const ms = adjustedElapsedForStage(t.id, stageKey);
+      return ms === null ? '' : formatClock(ms);
+    };
+    return [
+      i + 1,
+      t.dossard,
+      t.equipe || '',
+      t.categorie || 'Mixte',
+      cell('tangram'), penaltyCount(t.id, 'tangram'),
+      cell('runbike'), penaltyCount(t.id, 'runbike'),
+      cell('vtt'), penaltyCount(t.id, 'vtt'),
+      cell('co'), penaltyCount(t.id, 'co'),
+      archeryPoints(t.id), formatClock(archeryBonusMs(t.id)),
+      formatClock(r.total),
+    ].join(';');
+  });
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'classement-final.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+els.exportAllBtn.addEventListener('click', () => {
+  if (entries.length === 0) {
+    alert('Aucune équipe inscrite.');
+    return;
+  }
+
+  const statusOf = (team) => {
+    const cp = checkpoints[team.id] || {};
+    if (cp.dns) return 'DNS';
+    if (cp.fin) return 'Termine';
+    return 'En course';
+  };
+
+  const rank = { 'Termine': 0, 'DNS': 1, 'En course': 2 };
+  const sorted = entries.slice().sort((a, b) => {
+    const sa = statusOf(a), sb = statusOf(b);
+    if (rank[sa] !== rank[sb]) return rank[sa] - rank[sb];
+    if (sa === 'Termine') {
+      const ta = adjustedElapsedForStage(a.id, 'fin');
+      const tb = adjustedElapsedForStage(b.id, 'fin');
+      return (ta ?? 0) - (tb ?? 0);
+    }
+    return (parseInt(a.dossard, 10) || 0) - (parseInt(b.dossard, 10) || 0);
+  });
+
+  const header = 'Dossard;Equipe;Categorie;Statut;Tangram;PenTangram;RunBike;PenRunBike;VTTO;PenVTTO;CO;PenCO;PtsTirArc;BonusTirArc;TempsFinal';
+  const rows = sorted.map(t => {
+    const cell = (stageKey) => {
+      const ms = adjustedElapsedForStage(t.id, stageKey);
+      return ms === null ? '' : formatClock(ms);
+    };
+    const status = statusOf(t);
+    const tempsFinal = status === 'DNS' ? 'DNS' : (status === 'Termine' ? formatClock(adjustedElapsedForStage(t.id, 'fin')) : '');
+    return [
+      t.dossard,
+      t.equipe || '',
+      t.categorie || 'Mixte',
+      status,
+      cell('tangram'), penaltyCount(t.id, 'tangram'),
+      cell('runbike'), penaltyCount(t.id, 'runbike'),
+      cell('vtt'), penaltyCount(t.id, 'vtt'),
+      cell('co'), penaltyCount(t.id, 'co'),
+      archeryPoints(t.id), formatClock(archeryBonusMs(t.id)),
+      tempsFinal,
+    ].join(';');
+  });
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tous-les-resultats.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+function categoryFinalRows(category) {
+  const finished = entries
+    .filter(team => (team.categorie || 'Mixte') === category)
+    .filter(team => (checkpoints[team.id] || {}).fin && !(checkpoints[team.id] || {}).dns)
+    .map(team => ({ team, total: adjustedElapsedForStage(team.id, 'fin') }))
+    .filter(r => r.total !== null)
+    .sort((a, b) => a.total - b.total);
+
+  return finished.map((r, i) => {
+    const t = r.team;
+    const cell = (stageKey) => {
+      const ms = adjustedElapsedForStage(t.id, stageKey);
+      return ms === null ? '' : formatClock(ms);
+    };
+    return [
+      i + 1,
+      t.dossard,
+      t.equipe || '',
+      t.categorie || 'Mixte',
+      cell('tangram'), penaltyCount(t.id, 'tangram'),
+      cell('runbike'), penaltyCount(t.id, 'runbike'),
+      cell('vtt'), penaltyCount(t.id, 'vtt'),
+      cell('co'), penaltyCount(t.id, 'co'),
+      archeryPoints(t.id), formatClock(archeryBonusMs(t.id)),
+      formatClock(r.total),
+    ].join(';');
+  });
+}
+
+function stageRankingRows(stageKey) {
+  const ranked = entries
+    .map(team => {
+      const time = (checkpoints[team.id] || {})[stageKey];
+      if (!time) return null;
+      const elapsed = adjustedElapsedForStage(team.id, stageKey);
+      const pen = penaltyCount(team.id, stageKey);
+      return elapsed === null ? null : { team, elapsed, pen };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.elapsed - b.elapsed);
+
+  return ranked.map((r, i) => [
+    i + 1,
+    r.team.dossard,
+    r.team.equipe || '',
+    r.team.categorie || 'Mixte',
+    formatClock(r.elapsed),
+    r.pen,
+  ].join(';'));
+}
+
+function archeryRankingRows() {
+  const ranked = entries
+    .map(team => ({ team, points: archeryPoints(team.id) }))
+    .filter(r => r.points > 0)
+    .sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      return (parseInt(a.team.dossard, 10) || 0) - (parseInt(b.team.dossard, 10) || 0);
+    });
+
+  return ranked.map((r, i) => [
+    i + 1,
+    r.team.dossard,
+    r.team.equipe || '',
+    r.team.categorie || 'Mixte',
+    r.points,
+    formatClock(archeryBonusMs(r.team.id)),
+  ].join(';'));
+}
+
+els.exportRankingsBtn.addEventListener('click', () => {
+  if (entries.length === 0) {
+    alert('Aucune équipe inscrite.');
+    return;
+  }
+
+  const finalHeader = 'Rang;Dossard;Equipe;Categorie;Tangram;PenTangram;RunBike;PenRunBike;VTTO;PenVTTO;CO;PenCO;PtsTirArc;BonusTirArc;TempsFinal';
+  const stageHeader = 'Rang;Dossard;Equipe;Categorie;Temps;Penalites';
+  const archeryHeader = 'Rang;Dossard;Equipe;Categorie;Points;BonusTemps';
+
+  const sections = [
+    ['CLASSEMENT MIXTE', finalHeader, categoryFinalRows('Mixte')],
+    ['CLASSEMENT HOMMES', finalHeader, categoryFinalRows('Hommes')],
+    ['CLASSEMENT FEMMES', finalHeader, categoryFinalRows('Femmes')],
+    ['CLASSEMENT TANGRAM', stageHeader, stageRankingRows('tangram')],
+    ['CLASSEMENT RUN & BIKE', stageHeader, stageRankingRows('runbike')],
+    ["CLASSEMENT VTT'O", stageHeader, stageRankingRows('vtt')],
+    ['CLASSEMENT CO', stageHeader, stageRankingRows('co')],
+    ["CLASSEMENT TIR A L'ARC", archeryHeader, archeryRankingRows()],
+  ];
+
+  const lines = [];
+  sections.forEach(([title, header, rows]) => {
+    lines.push(title);
+    lines.push(header);
+    if (rows.length === 0) {
+      lines.push('Aucune donnée');
+    } else {
+      lines.push(...rows);
+    }
+    lines.push('');
+  });
+
+  const csv = lines.join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'classements-detailles.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+function showScreen(name) {
+  els.screens.forEach(s => s.classList.toggle('active', s.dataset.screen === name));
+  els.navTabs.querySelectorAll('.nav-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.screen === name);
+  });
+}
+
+els.navTabs.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => showScreen(btn.dataset.screen));
+});
+
+// ---------- Synchronisation temps réel entre appareils ----------
+let renderScheduled = false;
+function scheduleRender() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  setTimeout(() => {
+    renderScheduled = false;
+    render();
+    refreshNextDossard();
+    renderChrono();
+    renderStages();
+    renderRanking();
+  }, 50);
+}
+
+// Si les 4 épreuves sont validées (éventuellement sur des postes différents),
+// le temps final est calculé automatiquement, comme en saisie locale.
+function ensureAutoFin(teamId) {
+  const cp = checkpoints[teamId];
+  if (!cp || cp.fin || cp.finAuto === false) return;
+  if (!BASE_STAGE_KEYS.every(k => cp[k])) return;
+  cp.fin = Math.max(...BASE_STAGE_KEYS.map(k => cp[k]));
+  cp.finAuto = true;
+  flush();
+}
+
+function applyRemoteTeam(payload) {
+  if (payload.eventType === 'DELETE') {
+    const id = payload.old && payload.old.id;
+    if (!id) return;
+    entries = entries.filter(e => e.id !== id);
+    delete syncedTeams[id];
+  } else {
+    const team = payload.new && payload.new.data;
+    if (!team) return;
+    if ((payload.new.rev || 0) <= (teamRev[team.id] || 0)) return; // notification périmée
+    teamRev[team.id] = payload.new.rev || 0;
+    const c = canon(team);
+    const idx = entries.findIndex(e => e.id === team.id);
+    // Une modification locale pas encore envoyée garde la priorité
+    if (idx >= 0 && syncedTeams[team.id] !== canon(entries[idx]) && syncedTeams[team.id] !== undefined) return;
+    if (idx >= 0) entries[idx] = team; else entries.push(team);
+    syncedTeams[team.id] = c;
+  }
+  scheduleRender();
+}
+
+function applyRemoteField(payload) {
+  if (payload.eventType === 'DELETE') {
+    const o = payload.old || {};
+    if (!o.team_id || !o.field) return;
+    const key = o.team_id + FIELD_SEP + o.field;
+    if (!(key in syncedFields)) return;
+    const local = flattenCheckpoints({ [o.team_id]: checkpoints[o.team_id] })[key];
+    const prev = syncedFields[key];
+    delete syncedFields[key];
+    // Une valeur locale pas encore envoyée est conservée (elle sera renvoyée)
+    if (local === undefined || canon(local) === prev) {
+      setLocalField(o.team_id, o.field, undefined);
+    } else {
+      flush();
+    }
+  } else {
+    const r = payload.new || {};
+    if (!r.team_id || !r.field) return;
+    const key = r.team_id + FIELD_SEP + r.field;
+    if ((r.rev || 0) <= (fieldRev[key] || 0)) return; // notification périmée
+    fieldRev[key] = r.rev || 0;
+    const local = flattenCheckpoints({ [r.team_id]: checkpoints[r.team_id] })[key];
+    // Une modification locale pas encore envoyée garde la priorité
+    if (key in syncedFields && canon(local) !== syncedFields[key]) return;
+    syncedFields[key] = canon(r.value);
+    setLocalField(r.team_id, r.field, r.value);
+    ensureAutoFin(r.team_id);
+  }
+  scheduleRender();
+}
+
+function applyRemoteRace(payload) {
+  const r = payload.new;
+  if (!r) return;
+  if (canon(race.startedAt ?? null) !== syncedRace) return;
+  race = { startedAt: r.started_at === null ? null : Number(r.started_at) };
+  syncedRace = canon(race.startedAt);
+  scheduleRender();
+}
+
+function subscribeRealtime() {
+  if (realtimeChannel) return;
+  realtimeChannel = sb.channel('course')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, applyRemoteTeam)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'cp_fields' }, applyRemoteField)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'race_state' }, applyRemoteRace)
+    .subscribe(status => {
+      // Après une coupure réseau, on recharge tout pour ne rien manquer
+      if (status === 'SUBSCRIBED' && realtimeChannel && realtimeChannel._wasDisconnected) {
+        realtimeChannel._wasDisconnected = false;
+        reloadFromServer();
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        if (realtimeChannel) realtimeChannel._wasDisconnected = true;
+      }
+    });
+}
+
+async function reloadFromServer() {
+  // Envoie d'abord ce qui est en attente, puis relit l'état complet
+  await flush();
+  if (Object.keys(failedSaves).length > 0) return;
+  try {
+    await fetchState();
+    scheduleRender();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ---------- Connexion ----------
+const loginOverlay = document.getElementById('login-overlay');
+const loginEmail = document.getElementById('login-email');
+const loginPassword = document.getElementById('login-password');
+const loginBtn = document.getElementById('login-btn');
+const loginErr = document.getElementById('login-err');
+
+async function onSignedIn(session) {
+  loginOverlay.hidden = true;
+  document.getElementById('user-chip').textContent = session.user.email || '';
+  await load();
+}
+
+loginBtn.addEventListener('click', async () => {
+  loginErr.textContent = '';
+  loginBtn.disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: loginEmail.value.trim(),
+    password: loginPassword.value,
+  });
+  loginBtn.disabled = false;
+  if (error) {
+    loginErr.textContent = 'Identifiants incorrects ou compte inexistant.';
+    return;
+  }
+  loginPassword.value = '';
+  onSignedIn(data.session);
+});
+[loginEmail, loginPassword].forEach(i => i.addEventListener('keydown', ev => {
+  if (ev.key === 'Enter') { ev.preventDefault(); loginBtn.click(); }
+}));
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  if (pendingSaves > 0 || Object.keys(failedSaves).length > 0) {
+    if (!confirm('Des enregistrements sont en cours ou ont échoué. Se déconnecter quand même ?')) return;
+  }
+  if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
+  await sb.auth.signOut();
+  location.reload();
+});
+
+document.getElementById('load-retry-btn').addEventListener('click', load);
+
+showScreen('equipes');
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if (data.session) onSignedIn(data.session);
+  else loginOverlay.hidden = false;
+})();
+</script>
+</body>
+</html>
